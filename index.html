@@ -1,34 +1,812 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta charset="UTF-8">
-		<title>Chatbot</title>
-		<link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
-		<link rel="stylesheet" href="./css/chatbot.css">
-		<script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
-		<script src="./js/chatbot.js" type="text/javascript"></script>
-	</head>
-	<body style="background-image: url('https://www.bing.com/th?id=OHR.RoanRhododendron_ZH-CN6519978283_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp');">
-		<div class="chat-box shadowed">
-			<!-- CHAT HEADER -->
-			<div class="chat-window-header">
-				悠然机器人
-				<span id="mute-btn" class="clickable" ></span>
-			</div>
-			<!-- BOTO PLACEHOLDER -->
-			<div class="orb-holder">
-				<img class="orb" src="./images/orb2.png">
-				<img id="emoji" src="./images/boto/bored.gif">
-			</div>
-			<!-- CHAT SCREEN -->
-			<div class="chat-screen">
-			</div>
-			<!-- USER INPUT -->
-			<div style='display: flex;margin-top: 10px;'>			<input title="Chat input" class="chat-input" />
-				<div class="chat-send clickable">SEND</div>
-				<img id="speak-indicator" class="hidden" src="./images/speaking.gif" alt="speaking"/></div>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智能聊天助手</title>
+    
+    <!-- 依赖库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.6/purify.min.js"></script>
 
+    <style>
+		* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+background: #f0f2f5;
+overflow: hidden;
+}
+
+.chat-container {
+width: 100%;
+height: 100vh;
+max-width: 800px;
+margin: 0 auto;
+display: flex;
+flex-direction: column;
+background: white;
+box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.chat-messages {
+flex: 1;
+padding: 15px;
+overflow-y: auto;
+background: #f8f9fa;
+}
+
+.message {
+margin: 10px 0;
+padding: 12px 16px;
+border-radius: 20px;
+max-width: 80%;
+word-break: break-word;
+line-height: 1.6;
+animation: fadeIn 0.3s ease-in;
+}
+
+.user-message {
+background: #007bff;
+color: white;
+margin-left: auto;
+border-bottom-right-radius: 4px;
+}
+
+.bot-message {
+background: white;
+color: #333;
+margin-right: auto;
+border: 1px solid #eee;
+border-bottom-left-radius: 4px;
+}
+
+/* Markdown样式 */
+.bot-message pre {
+background: #f8f8f8;
+padding: 15px;
+border-radius: 8px;
+overflow-x: auto;
+margin: 10px 0;
+}
+
+.bot-message code {
+font-family: 'SFMono-Regular', Consolas, monospace;
+background: #f3f3f3;
+padding: 2px 4px;
+border-radius: 4px;
+font-size: 14px;
+}
+
+/* 加载动画 */
+.typing-indicator {
+background: #fff;
+padding: 15px 20px;
+border-radius: 20px;
+display: inline-flex;
+align-items: center;
+box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+margin: 10px 0;
+}
+
+.typing-dot {
+width: 8px;
+height: 8px;
+margin: 0 3px;
+background: #ddd;
+border-radius: 50%;
+animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.input-container {
+display: flex;
+padding: 15px;
+gap: 10px;
+border-top: 1px solid #eee;
+background: white;
+position: sticky;
+bottom: 0;
+}
+
+#messageInput {
+flex: 1;
+padding: 12px 16px;
+border: 1px solid #ddd;
+border-radius: 25px;
+font-size: 16px;
+outline: none;
+transition: border-color 0.3s;
+}
+
+#sendButton {
+padding: 12px 20px;
+background: #007bff;
+color: white;
+border: none;
+border-radius: 25px;
+cursor: pointer;
+transition: all 0.3s;
+}
+
+#sendButton:disabled {
+background: #ccc;
+cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+.chat-container { max-width: 100%; }
+
+.message {
+max-width: 90%;
+padding: 10px 14px;
+font-size: 15px;
+}
+
+.bot-message pre {
+padding: 12px;
+font-size: 12px;
+}
+
+.input-container { padding: 12px; }
+
+.typing-indicator {
+padding: 12px 16px;
+}
+
+.typing-dot {
+width: 6px;
+height: 6px;
+}
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes typing {
+0%, 60%, 100% { transform: translateY(0); }
+30% { transform: translateY(-5px); }
+}
+        /* 新增布局样式 */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: white;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #f8f9fa;
+            border-right: 1px solid #eee;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tab-button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #666;
+        }
+
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .content-panel {
+            display: none;
+            height: 100%;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        /* 文档分析模块样式 */
+        .doc-container {
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .upload-section {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        .upload-section.dragover {
+            border-color: #007bff;
+            background: rgba(0,123,255,0.05);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* 调整原有聊天容器 */
+        .chat-container {
+            height: calc(100vh - 40px); /* 留出顶部边距 */
+            max-width: 100%;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+	<!DOCTYPE html>
+	<html lang="zh-CN">
+	<head>
+		<!-- 保持原有head部分不变，新增以下样式 -->
+		<style>
+			/* 新增布局样式 */
+			.app-container {
+				display: flex;
+				height: 100vh;
+				background: white;
+			}
+	
+			.sidebar {
+				width: 200px;
+				background: #f8f9fa;
+				border-right: 1px solid #eee;
+				padding: 20px;
+				display: flex;
+				flex-direction: column;
+			}
+	
+			.tab-group {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+	
+			.tab-button {
+				padding: 12px 16px;
+				border: none;
+				border-radius: 8px;
+				background: none;
+				text-align: left;
+				cursor: pointer;
+				transition: all 0.2s;
+				color: #666;
+			}
+	
+			.tab-button.active {
+				background: #007bff;
+				color: white;
+			}
+	
+			.tab-button:hover:not(.active) {
+				background: #e9ecef;
+			}
+	
+			.main-content {
+				flex: 1;
+				overflow: hidden;
+				position: relative;
+			}
+	
+			.content-panel {
+				display: none;
+				height: 100%;
+			}
+	
+			.content-panel.active {
+				display: block;
+			}
+	
+			/* 文档分析模块样式 */
+			.doc-container {
+				padding: 20px;
+				max-width: 1000px;
+				margin: 0 auto;
+			}
+	
+			.upload-section {
+				border: 2px dashed #ddd;
+				border-radius: 12px;
+				padding: 40px;
+				text-align: center;
+				margin: 20px 0;
+				transition: all 0.3s;
+			}
+	
+			.upload-section.dragover {
+				border-color: #007bff;
+				background: rgba(0,123,255,0.05);
+			}
+	
+			#fileInput {
+				display: none;
+			}
+	
+			/* 调整原有聊天容器 */
+			.chat-container {
+				height: calc(100vh - 40px); /* 留出顶部边距 */
+				max-width: 100%;
+				box-shadow: none;
+			}
+			/* 新增会话列表样式 */
+			.session-layout {
+        display: flex;
+        height: 100vh;
+    }
+
+    .session-list {
+        width: 240px;
+        background: #f8f9fa;
+        border-right: 1px solid #eee;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .new-session-btn {
+        padding: 12px;
+        margin: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .new-session-btn span {
+        font-size: 20px;
+    }
+
+    .session-items {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .session-item {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .session-item:hover {
+        background: #e9ecef;
+    }
+
+    .session-item.active {
+        background: #dee2e6;
+    }
+
+    .session-title {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .session-time {
+        font-size: 12px;
+        color: #666;
+    }
+
+    /* 调整聊天窗口宽度 */
+    .chat-container {
+        flex: 1;
+        max-width: calc(100% - 240px);
+    }
+		</style>
+	</head>
+	<body>
+		<div class="app-container">
+			<!-- 左侧功能栏 -->
+			<div class="sidebar">
+				<div class="tab-group">
+					<button class="tab-button active" data-panel="chatPanel">高效问答</button>
+					<button class="tab-button" data-panel="docPanel">文档分析</button>
+				</div>
+			</div>
+	
+			<!-- 主内容区 -->
+			<div class="main-content">
+				<!-- 高效问答模块 -->
+				<div id="chatPanel" class="content-panel active">
+					<div class="session-layout">
+						<!-- 左侧会话列表 -->
+						<div class="session-list">
+							<button id="newSessionBtn" class="new-session-btn">
+								<span>+</span> 新建会话
+							</button>
+							<div class="session-items" id="sessionItems"></div>
+						</div>
+				
+						<!-- 右侧聊天窗口 -->
+						<div class="chat-container">
+							<div class="chat-messages" id="chatMessages"></div>
+							<div class="input-container">
+								<input type="text" id="messageInput" placeholder="输入消息...">
+								<button id="sendButton">发送</button>
+							</div>
+						</div>
+					</div>
+				</div>
+	
+				<!-- 文档分析模块 -->
+				<div id="docPanel" class="content-panel">
+					<div class="doc-container">
+						<h2>文档分析</h2>
+						<div class="upload-section" id="dropZone">
+							<p>拖放文件到此区域或点击上传</p>
+							<input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md">
+						</div>
+						<div class="analysis-results">
+							<!-- 分析结果展示区 -->
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
-		<!-- <div class="copyright">lingyunzi09@gmail.com</div> -->
-	</body>
+
+    <script>
+// 会话管理模块
+let sessions = [];
+let currentSessionId = null;
+
+// 初始化会话系统
+function initSessions() {
+    const saved = localStorage.getItem('chatSessions_v2'); // 更新存储版本
+    if (saved) {
+        try {
+            sessions = JSON.parse(saved).map(session => ({
+                ...session,
+                messages: session.messages || [], // 兼容旧数据
+                lastUpdated: new Date(session.lastUpdated)
+            }));
+        } catch (error) {
+            console.error('会话数据解析失败:', error);
+            sessions = [];
+        }
+    }
+    
+    if (sessions.length === 0) {
+        createNewSession();
+    } else {
+        currentSessionId = sessions[0].id;
+        loadSession(currentSessionId);
+    }
+}
+
+
+// 创建新会话
+function createNewSession() {
+    const newSession = {
+        id: Date.now(),
+        title: '新会话',
+        messages: [],
+        lastUpdated: new Date()
+    };
+    
+    sessions.unshift(newSession);
+    currentSessionId = newSession.id;
+    saveSessions();
+    renderSessions();
+    clearChatWindow();
+}
+
+// 持久化存储
+function saveSessions() {
+    const data = sessions.map(session => ({
+        ...session,
+        lastUpdated: session.lastUpdated.getTime() // 存储时间戳
+    }));
+    localStorage.setItem('chatSessions_v2', JSON.stringify(data));
+}
+// 消息存储逻辑
+function saveMessage(role, content) {
+    const session = sessions.find(s => s.id === currentSessionId);
+    if (!session) return;
+
+    session.messages.push({
+        role,
+        content,
+        timestamp: new Date()
+    });
+    
+    session.lastUpdated = new Date();
+    session.title = generateSessionTitle(content);
+    saveSessions();
+}
+
+// 增强型会话加载
+function loadSession(sessionId) {
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    clearChatWindow();
+    (session.messages || []).forEach(msg => { // 安全遍历
+        // addMessage(msg.role, msg.content, false);
+        addMessage(msg.content,msg.role,  false);
+    });
+}
+
+    function renderSessions() {
+        const container = document.getElementById('sessionItems');
+        container.innerHTML = sessions.map(session => `
+            <div class="session-item ${session.id === currentSessionId ? 'active' : ''}" 
+                 data-id="${session.id}">
+                <div class="session-title">${session.title}</div>
+                <div class="session-time">${formatTime(session.lastUpdated)}</div>
+            </div>
+        `).join('');
+        
+        // 添加点击事件
+        document.querySelectorAll('.session-item').forEach(item => {
+            item.addEventListener('click', () => {
+                currentSessionId = parseInt(item.dataset.id);
+                loadSession(currentSessionId);
+                renderSessions();
+            });
+        });
+    }
+
+    function loadSession(sessionId) {
+        const session = sessions.find(s => s.id === sessionId);
+        clearChatWindow();
+        session.messages.forEach(msg => {
+            // addMessage(msg.role, msg.content, false);
+			addMessage(msg.content,msg.role,  false);
+        });
+    }
+
+    function clearChatWindow() {
+        chatMessages.innerHTML = '';
+    }
+
+    function formatTime(date) {
+        return new Date(date).toLocaleString();
+    }
+		 // 新增Tab切换功能
+		 document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // 切换按钮状态
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 切换内容面板
+                const targetPanel = this.dataset.panel;
+                document.querySelectorAll('.content-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                    panel.style.display = 'none';
+                });
+                document.getElementById(targetPanel).classList.add('active');
+                document.getElementById(targetPanel).style.display = 'block';
+            });
+        });
+
+        // 文件上传处理
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        // 拖拽事件处理
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // 点击上传
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const fileName = files[0].name;
+                dropZone.innerHTML = `
+                    <p>已选择文件：</p>
+                    <div class="file-info">
+                        <strong>${fileName}</strong>
+                        <button onclick="clearFile()">清除</button>
+                    </div>
+                `;
+                // 这里可以添加文件上传逻辑
+            }
+        }
+
+        function clearFile() {
+            fileInput.value = '';
+            dropZone.innerHTML = '<p>拖放文件到此区域或点击上传</p>';
+        }
+        // 配置Markdown解析
+        marked.setOptions({
+            breaks: true,
+            highlight: code => hljs.highlightAuto(code).value
+        });
+
+        // 初始化元素
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        let isBotResponding = false;
+        // 新增API配置
+        const API_CONFIG = {
+            ENDPOINT: 'http://192.168.8.138:8890/chat/me',  // 替换为实际API地址
+            HEADERS: {
+                'Content-Type': 'application/json',
+            }
+        };
+		// 消息处理修正
+async function handleSendMessage() {
+    if (isBotResponding) return;
+    
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    // 保存用户消息
+    saveMessage('user', message);
+    addMessage(message, 'user');
+    
+    // 清空输入框
+    messageInput.value = '';
+    sendButton.disabled = true;
+
+    try {
+        showTypingIndicator();
+        
+        // 获取完整会话数据
+        const currentSession = sessions.find(s => s.id === currentSessionId);
+        const response = await fetchBotResponse({
+            session_id: currentSession.id,
+            messages: currentSession.messages.map(m => ({
+                role: m.role,
+                content: m.content.replace(/<[^>]+>/g, '')
+            }))
+        });
+
+        // 保存并显示回复
+        saveMessage('bot', response);
+        addMessage(response, 'bot');
+    } catch (error) {
+        console.error('请求失败:', error);
+        saveMessage('system', `错误: ${error.message}`);
+        addMessage(`❌ 请求失败：${error.message}`, 'bot');
+    } finally {
+        hideTypingIndicator();
+        sendButton.disabled = false;
+    }
+}
+
+// 增强数据校验
+function getCurrentSessionData() {
+    const session = sessions.find(s => s.id === currentSessionId);
+    return session ? {
+        ...session,
+        messages: session.messages.map(m => ({
+            role: m.role,
+            content: m.content.replace(/<[^>]+>/g, ''),
+            timestamp: m.timestamp || new Date() // 补全时间戳
+        }))
+    } : null;
+}
+       // 新增网络请求方法
+       async function fetchBotResponse(userMessage) {
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINT, {
+                    method: 'POST',
+                    headers: API_CONFIG.HEADERS,
+                    body: JSON.stringify({
+                        msg: userMessage,
+                    })
+                });
+
+                if (!response.code==100) {
+                    throw new Error(`HTTP错误 ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.msg;  // 根据实际API响应结构调整
+            } catch (error) {
+                throw new Error(`网络请求失败：${error.message}`);
+            }
+        }
+        // 添加消息
+        function addMessage(text, sender) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${sender}-message`;
+            
+            if (sender === 'bot') {
+                messageEl.innerHTML = DOMPurify.sanitize(marked.parse(text));
+            } else {
+                messageEl.textContent = text;
+            }
+
+            chatMessages.appendChild(messageEl);
+            scrollToBottom();
+        }
+
+       // 加载提示
+	   function showTypingIndicator() {
+            isBotResponding = true;
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatMessages.appendChild(indicator);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            isBotResponding = false;
+            document.querySelectorAll('.typing-indicator').forEach(indicator => indicator.remove());
+        }
+
+        // 辅助功能
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 事件监听
+        sendButton.addEventListener('click', handleSendMessage);
+        messageInput.addEventListener('keypress', e => e.key === 'Enter' && handleSendMessage());
+        window.addEventListener('DOMContentLoaded', () => {
+            addMessage('支持Markdown的聊天助手已就绪！\n\n试试发送：\n- **加粗文字**\n- `代码`\n- 列表项', 'bot');
+        });
+        window.addEventListener('resize', scrollToBottom);
+		function generateSessionTitle(content) {
+        const cleanContent = content.replace(/<[^>]+>/g, '').substring(0, 20);
+        return cleanContent || '新会话';
+    }
+
+    // 初始化
+    document.getElementById('newSessionBtn').addEventListener('click', createNewSession);
+    initSessions();
+    </script>
+</body>
 </html>

@@ -1,72 +1,48 @@
-"""
-This is the template server side for ChatBot
-"""
 import bottle
 from bottle import route, run, template, static_file, request,response
 import json
-import urllib.request
-import os
-import re
-import editdistance,random
 import logging
+import llm
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 DATE_FORMAT = "%m/%d/%Y %H:%M:%S %p"
-logging.basicConfig(filename='qa.log', level=logging.DEBUG, format=LOG_FORMAT, datefmt=DATE_FORMAT)
+logging.basicConfig(filename='qa.log', level=logging.WARNING, format=LOG_FORMAT, datefmt=DATE_FORMAT)
 app = bottle.app()
-class qa_node:
-    def __init__(self,q,a,queue):
-        self.queue=queue
-        self.q=q
-        self.a=a
-def load_data():
-    logging.debug('Loading pairs...')
-    lines=open('data/qa1.txt','r').readlines()
-    # print(lines[:10])
-    logging.debug('Loading pairs done,length:'+str(len(lines)))
-    qa_list=[]
-    for i,line in enumerate(lines):
-        if 'YongYiDaRecord' in line:
-            continue
-        arrs=line.split('$')
-        # print(arrs)
-        n=qa_node(arrs[0],arrs[1],i)
-        qa_list.append(n)
-    return qa_list
-def remove_stopwords(test_input):
-    pattern='的了吗啊呢吧'
-    return re.sub(pattern=pattern,repl='',string=test_input)
-def similarity_edit(str1,str2):
-    str1=remove_stopwords(str1)
-    str2 = remove_stopwords(str2)
-    length=len(str1)
-    if (len(str1)<len(str2)):
-        length = len(str2)
-    return editdistance.eval(str1,str2)/length
-def get_reply(test_input):
-    test_input=remove_stopwords(test_input)
-    # arr = string2array(test_input)
-    # index = model.predict(arr)
-    # value  = index2cata[np.argmax(index[0])]
-    qa_list.sort(key=lambda qa: similarity_edit(test_input, qa.q))
-    min_qa=qa_list[random.randint(0,10)]
-    logging.debug('question:'+test_input+' most similarity Q:'+str(min_qa.q)+' A:'+str(min_qa.a))
-    return min_qa.a
 
-qa_list=load_data()
-twoWay = {"userNames":[]}
-newsConvo = {"engaged":False}
-def checkForQuestion(msg):
-    # questions = ["what","when","where","why","how","can","may"]
-    # if any(word in msg.lower().split() for word in questions):
-    #     return {"animation": "no","msg":"Thats a good question!"}
-    return {"animation": "no","msg":get_reply(msg)}
+def get_reply(querys):
+    prompts=[]
+    if len(querys)>=5:
+        query=querys[-5:]
+    prompts.append(llm.build_prompt(query["role"],query["content"]))
+    text = llm.tokenizer.apply_chat_template(
+        prompts,
+        tokenize=False,
+        add_generation_prompt=True
+    )
 
-def checkMessage(msg):
+    inputs = llm.tokenizer(text, return_tensors="pt",padding=True).to('cuda')
 
-    question = checkForQuestion(msg)
+    from transformers import TextIteratorStreamer
+    from threading import Thread
+
+    streamer = TextIteratorStreamer(llm.tokenizer,skip_prompt=True)
+    # Run the generation in a separate thread, so that we can fetch the generated text in a non-blocking way.
+    generation_kwargs = dict(inputs, streamer=streamer, max_new_tokens=4000)
+    thread = Thread(target=llm.model.generate, kwargs=generation_kwargs)
+    thread.start()
+    generated_text = ""
+    for new_text in streamer:
+        generated_text += new_text
+    return generated_text.split("</think>")[-1].replace("<｜end▁of▁sentence｜>","")
+
+
+def checkForQuestion(msgs):
+    return {"code":100,"animation": "no","msg":get_reply(msgs)}
+
+def checkMessage(msgs):
+    question = checkForQuestion(msgs)
     if question:return question
     else:
-        return {"animation":"inlove","msg":"I didnt understand that, im a pretty dumb boto"}
+        return {"code":101,"animation":"inlove","msg":"I didnt understand that, im a pretty dumb boto"}
 
 @route('/', method='GET')
 def index():
@@ -76,10 +52,10 @@ def index():
 
 @route("/chat/<username>", method=['OPTIONS','POST'])
 def chat(username):
-    postValue = request.POST.decode('utf-8')
-    user_message =postValue['msg']
-    logging.debug('get new msg:'+user_message)
-    return json.dumps(checkMessage(user_message))
+    user_messages =request.json['msg']["messages"] #postValue['msg']
+    logging.warning('get new msg:')
+    logging.warning(user_messages)
+    return json.dumps(checkMessage(user_messages))
 
 @route("/test", method='POST')
 def chat():

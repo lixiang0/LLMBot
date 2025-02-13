@@ -1,14 +1,17 @@
-# 悠然机器人
+# 悠然AI助理
 
-悠然机器人的目标是打造一个智能机器人助理，点击[悠然机器人](http://122.51.50.206:8889/)体验。
+悠然AI助理的目标是打造一个智能的机器人助理。
 
 # 主页
-<img src='home.jpg' width=400>
+<img src='home.png' width=800>
 
 # 部署
 
 ```
-pip install paste bottle editdistance
+conda create -p ./env python=3.12
+pip install -r requirements.txt
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install 'accelerate>=0.26.0'
 git clone https://github.com/lixiang0/ChatBot
 cd ChatBot
 python boto.py
@@ -22,7 +25,3 @@ Hit Ctrl-C to quit.
 
 serving on 0.0.0.0:8890 view at http://127.0.0.1:8890
 ```
-
-# 关于语料
-
-只需要按照```q$a```的格式在```data/qa1.txt```添加，然后重启程序即可。
