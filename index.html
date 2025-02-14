@@ -262,7 +262,7 @@ to { opacity: 1; transform: translateY(0); }
         /* 调整原有聊天容器 */
         .chat-container {
             height: calc(100vh - 40px); /* 留出顶部边距 */
-            max-width: 100%;
+            /* max-width: 100%; */
             box-shadow: none;
         }
     </style>
@@ -672,9 +672,12 @@ function loadSession(sessionId) {
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         let isBotResponding = false;
+        var localObj = window.location;
+        var contextPath = localObj.pathname.split("/")[1];
+        var basePath = localObj.protocol + "//" + localObj.host + '/' + contextPath;
         // 新增API配置
         const API_CONFIG = {
-            ENDPOINT: 'http://192.168.8.138:8890/chat/me',  // 替换为实际API地址
+            ENDPOINT: basePath+'chat/me',  // 替换为实际API地址
             HEADERS: {
                 'Content-Type': 'application/json',
             }

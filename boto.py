@@ -10,9 +10,12 @@ app = bottle.app()
 
 def get_reply(querys):
     prompts=[]
-    if len(querys)>=5:
-        query=querys[-5:]
-    prompts.append(llm.build_prompt(query["role"],query["content"]))
+    if len(querys)>=5*2:
+        querys=querys[-5*2:]
+    for query in querys:
+        if query["role"] == "bot":
+            query["role"]="system"
+        prompts.append(llm.build_prompt(query["role"],query["content"]))
     text = llm.tokenizer.apply_chat_template(
         prompts,
         tokenize=False,
@@ -26,13 +29,14 @@ def get_reply(querys):
 
     streamer = TextIteratorStreamer(llm.tokenizer,skip_prompt=True)
     # Run the generation in a separate thread, so that we can fetch the generated text in a non-blocking way.
-    generation_kwargs = dict(inputs, streamer=streamer, max_new_tokens=4000)
+    generation_kwargs = dict(inputs, streamer=streamer, max_new_tokens=4000,temperature=0.6)
     thread = Thread(target=llm.model.generate, kwargs=generation_kwargs)
     thread.start()
     generated_text = ""
     for new_text in streamer:
         generated_text += new_text
-    return generated_text.split("</think>")[-1].replace("<｜end▁of▁sentence｜>","")
+    logging.warning(generated_text)
+    return "**以下为思考过程**\n"+generated_text.replace("</think>","**以下为回答内容**\n").replace("<｜end▁of▁sentence｜>","")
 
 
 def checkForQuestion(msgs):
@@ -83,7 +87,7 @@ def images(filename):
 
 def main():
     
-    app.run(host='0.0.0.0', port=8890,server='paste')
+    app.run(host='0.0.0.0', port=8181,server='paste')
 
 if __name__ == '__main__':
     main()
