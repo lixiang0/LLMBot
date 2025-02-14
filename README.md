@@ -3,7 +3,7 @@
 悠然AI助理的目标是打造一个智能的机器人助理。
 
 # 主页
-<img src='home.jpg' width=800>
+<img src='home.png' width=800>
 
 # 部署
 
