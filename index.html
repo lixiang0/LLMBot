@@ -427,6 +427,101 @@ to { opacity: 1; transform: translateY(0); }
         flex: 1;
         max-width: calc(100% - 240px);
     }
+    /* 新增移动端响应式样式 */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 60px;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tab-group {
+        flex-direction: row;
+        gap: 6px;
+    }
+
+    .tab-button {
+        padding: 8px 12px;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+
+    .session-layout {
+        flex-direction: column-reverse;
+    }
+
+    .session-list {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-top: 1px solid #eee;
+    }
+
+    .chat-container {
+        max-width: 100%;
+        height: calc(100vh - 260px);
+    }
+
+    .message {
+        max-width: 90%;
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    .input-container {
+        padding: 10px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: white;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+
+    #messageInput {
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    #sendButton {
+        padding: 10px 16px;
+    }
+
+    /* 文件上传区域优化 */
+    .upload-section {
+        padding: 20px;
+        margin: 10px 0;
+    }
+
+    /* 隐藏复杂元素 */
+    .session-time {
+        display: none;
+    }
+}
+
+/* 增加移动端触摸反馈 */
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.message {
+    touch-action: manipulation;
+}
+
+/* 防止移动端缩放 */
+input, textarea, select {
+    font-size: 16px;
+    transform: translateZ(0);
+}
 		</style>
 	</head>
 	<body>
@@ -777,7 +872,7 @@ function getCurrentSessionData() {
             const indicator = document.createElement('div');
             indicator.className = 'typing-indicator';
             indicator.innerHTML = `
-                <div class="typing-dot"></div>
+                思考中<div class="typing-dot"></div>
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
             `;
@@ -807,6 +902,33 @@ function getCurrentSessionData() {
         return cleanContent || '新会话';
     }
 
+    // 添加移动端手势支持
+let touchStartY = 0;
+
+document.addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+});
+
+document.addEventListener('touchmove', e => {
+    const touchY = e.touches[0].clientY;
+    // 下滑隐藏键盘
+    if (touchY - touchStartY > 10) {
+        document.activeElement.blur();
+    }
+});
+
+// 调整输入框避免被键盘遮挡
+function adjustInput() {
+    if (window.innerWidth < 768) {
+        const input = document.getElementById('messageInput');
+        input.addEventListener('focus', () => {
+            setTimeout(() => {
+                document.documentElement.scrollTop = document.documentElement.scrollHeight;
+            }, 300);
+        });
+    }
+}
+window.addEventListener('DOMContentLoaded', adjustInput);
     // 初始化
     document.getElementById('newSessionBtn').addEventListener('click', createNewSession);
     initSessions();
