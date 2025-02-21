@@ -1,8 +1,8 @@
 from transformers import MistralForCausalLM, AutoTokenizer,pipeline, TextStreamer
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-# os.environ['CUDA_VISIBLE_DEVICES']='1'
-base_model="./DeepSeek-R1-Distill-Qwen-14B"# 31
+import torch,os
+# os.environ['CUDA_VISIBLE_DEVICES']='0'
+base_model="/home/ruben/disk2/HF_MODELS/DeepSeek-R1-Distill-Qwen-1.5B"# 31
 # base_model="/home/ruben/disk2/HF_MODELS/DeepSeek-R1-Distill-Qwen-7B"# 74
 # base_model="/home/ruben/disk2/HF_MODELS/Meta-Llama-3-8B-Instruct" #32.9
 

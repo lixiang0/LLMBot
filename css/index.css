@@ -1,0 +1,542 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background: #f0f2f5;
+  overflow: hidden;
+}
+
+.chat-container {
+  width: 100%;
+  height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 12px 16px;
+  border-radius: 20px;
+  max-width: 80%;
+  word-break: break-word;
+  line-height: 1.6;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.user-message {
+  background: #007bff;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.bot-message {
+  background: white;
+  color: #333;
+  margin-right: auto;
+  border: 1px solid #eee;
+  border-bottom-left-radius: 4px;
+}
+
+/* Markdown样式 */
+.bot-message pre {
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.bot-message code {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  background: #f3f3f3;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* 加载动画 */
+.typing-indicator {
+  background: #fff;
+  padding: 15px 20px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin: 10px 0;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 3px;
+  background: #ddd;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.input-container {
+  display: flex;
+  padding: 15px;
+  gap: 10px;
+  border-top: 1px solid #eee;
+  background: white;
+  position: sticky;
+  bottom: 0;
+}
+
+#messageInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+#sendButton {
+  padding: 12px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+#sendButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .chat-container {
+    max-width: 100%;
+  }
+
+  .message {
+    max-width: 90%;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .bot-message pre {
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .input-container {
+    padding: 12px;
+  }
+
+  .typing-indicator {
+    padding: 12px 16px;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes typing {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 新增布局样式 */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background: white;
+}
+
+.sidebar {
+  width: 200px;
+  background: #f8f9fa;
+  border-right: 1px solid #eee;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tab-button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.tab-button.active {
+  background: #007bff;
+  color: white;
+}
+
+.tab-button:hover:not(.active) {
+  background: #e9ecef;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.content-panel {
+  display: none;
+  height: 100%;
+}
+
+.content-panel.active {
+  display: block;
+}
+
+/* 文档分析模块样式 */
+.doc-container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.upload-section {
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  margin: 20px 0;
+  transition: all 0.3s;
+}
+
+.upload-section.dragover {
+  border-color: #007bff;
+  background: rgba(0, 123, 255, 0.05);
+}
+
+#fileInput {
+  display: none;
+}
+
+/* 调整原有聊天容器 */
+.chat-container {
+  height: calc(100vh - 40px);
+  /* 留出顶部边距 */
+  /* max-width: 100%; */
+  box-shadow: none;
+}
+
+/* 新增布局样式 */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background: white;
+}
+
+.sidebar {
+  width: 200px;
+  background: #f8f9fa;
+  border-right: 1px solid #eee;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tab-button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.tab-button.active {
+  background: #007bff;
+  color: white;
+}
+
+.tab-button:hover:not(.active) {
+  background: #e9ecef;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.content-panel {
+  display: none;
+  height: 100%;
+}
+
+.content-panel.active {
+  display: block;
+}
+
+/* 文档分析模块样式 */
+.doc-container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.upload-section {
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  margin: 20px 0;
+  transition: all 0.3s;
+}
+
+.upload-section.dragover {
+  border-color: #007bff;
+  background: rgba(0, 123, 255, 0.05);
+}
+
+#fileInput {
+  display: none;
+}
+
+/* 调整原有聊天容器 */
+.chat-container {
+  height: calc(100vh - 40px);
+  /* 留出顶部边距 */
+  max-width: 100%;
+  box-shadow: none;
+}
+
+/* 新增会话列表样式 */
+.session-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.session-list {
+  width: 240px;
+  background: #f8f9fa;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+}
+
+.new-session-btn {
+  padding: 12px;
+  margin: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-session-btn span {
+  font-size: 20px;
+}
+
+.session-items {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.session-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.session-item:hover {
+  background: #e9ecef;
+}
+
+.session-item.active {
+  background: #dee2e6;
+}
+
+.session-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.session-time {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 调整聊天窗口宽度 */
+.chat-container {
+  flex: 1;
+  max-width: calc(100% - 240px);
+}
+
+/* 新增移动端响应式样式 */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+
+  .tab-group {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .tab-button {
+    padding: 8px 12px;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .session-layout {
+    flex-direction: column-reverse;
+  }
+
+  .session-list {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-top: 1px solid #eee;
+  }
+
+  .chat-container {
+    max-width: 100%;
+    height: calc(100vh - 260px);
+  }
+
+  .message {
+    max-width: 90%;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .input-container {
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  #messageInput {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  #sendButton {
+    padding: 10px 16px;
+  }
+
+  .delete-session-btn {
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  /* 文件上传区域优化 */
+  .upload-section {
+    padding: 20px;
+    margin: 10px 0;
+  }
+
+  /* 隐藏复杂元素 */
+  .session-time {
+    display: none;
+  }
+}
+
+/* 增加移动端触摸反馈 */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.message {
+  touch-action: manipulation;
+}
+
+/* 防止移动端缩放 */
+input,
+textarea,
+select {
+  font-size: 16px;
+  transform: translateZ(0);
+}

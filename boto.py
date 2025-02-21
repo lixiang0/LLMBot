@@ -10,8 +10,8 @@ app = bottle.app()
 
 def get_reply(querys):
     prompts=[]
-    if len(querys)>=5*2:
-        querys=querys[-5*2:]
+    if len(querys)>=5:
+        querys=querys[-5:]
     for query in querys:
         if query["role"] == "bot":
             query["role"]="system"
@@ -66,24 +66,18 @@ def chat():
     user_message = request.POST.get('msg') #print this
     return json.dumps({"animation": "inlove", "msg": user_message})
 
-
-@route('/js/<filename:re:.*\.js>', method='GET')
-def javascripts(filename):
-    return static_file(filename, root='js')
-
-
-@route('/css/<filename:re:.*\.css>', method='GET')
-def stylesheets(filename):
-    return static_file(filename, root='css')
-
-@route('/cors', method=['OPTIONS', 'GET'])
-def lvambience():
-    response.headers['Content-type'] = 'application/json'
-    return '[1]'
-    
-@route('/images/<filename:re:.*\.(jpg|png|gif|ico)>', method='GET')
-def images(filename):
-    return static_file(filename, root='images')
+@route('/<file_type:re:(js|css|images)>/<filename:re:.*\.(js|css|jpg|png|gif|ico)>', method='GET')
+def serve_static(file_type, filename):
+    # 定义 root 目录，根据文件类型动态选择子目录
+    root_dirs = {
+        'js': 'js',
+        'css': 'css',
+        'images': 'images'
+    }
+    root = root_dirs.get(file_type)
+    if root:
+        return static_file(filename, root=root)
+    return "File type not supported", 404
 
 def main():
     
