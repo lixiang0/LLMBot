@@ -71,13 +71,17 @@
 
         // 初始化会话系统
         function initSessions() {
-            const saved = localStorage.getItem('chatSessions_v2'); // 更新存储版本
-            sessions = JSON.parse(saved).map(session => ({
-                ...session,
-                messages: session.messages || [], // 兼容旧数据
-                lastUpdated: new Date(session.lastUpdated)
-            }));
-            console.log(sessions)
+            try {
+                const saved = localStorage.getItem('chatSessions_v2'); // 更新存储版本
+                sessions = JSON.parse(saved).map(session => ({
+                    ...session,
+                    messages: session.messages || [], // 兼容旧数据
+                    lastUpdated: new Date(session.lastUpdated)
+                }));
+            } catch (error) {
+
+            }
+
             if (sessions.length > 0) {
                 currentSessionId = sessions[0].id;
                 loadSession(currentSessionId);
@@ -85,9 +89,7 @@
             } else {
                 createNewSession()
             }
-
         }
-
 
 
         // 创建新会话
@@ -297,7 +299,9 @@
 
             try {
                 showTypingIndicator();
-
+                if (sessions.length == 0) {
+                    createNewSession()
+                }
                 // 获取完整会话数据
                 const currentSession = sessions.find(s => s.id === currentSessionId);
                 const response = await fetchBotResponse({
