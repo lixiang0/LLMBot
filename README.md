@@ -1,6 +1,6 @@
 # LLMBot
 
-从0构建一个智能AI助理，包括LLM/RAG/AGENT/Multi-Model等技术。
+使用LLM/RAG/AGENT/Multi-Model等从0构建一个[智能AI助理](http://1.14.73.45:18181/)。
 
 
 # 主页
