@@ -41,8 +41,8 @@
                     <div class="chat-container">
                         <div class="chat-messages" id="chatMessages"></div>
                         <div class="input-container">
-                            <input type="text" id="messageInput" placeholder="输入消息...">
-                            <button id="sendButton">发送</button>
+                            <input class="messageInput" type="text" id="messageInput" placeholder="输入消息...">
+                            <button class="sendButton" id="sendButton">发送</button>
                         </div>
                     </div>
                 </div>
@@ -50,14 +50,30 @@
 
             <!-- 文档分析模块 -->
             <div id="docPanel" class="content-panel">
-                <div class="doc-container">
-                    <h2>文档分析</h2>
-                    <div class="upload-section" id="dropZone">
-                        <p>拖放文件到此区域或点击上传</p>
-                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md">
+                <div class="session-layout">
+                    <!-- 左侧文档列表 -->
+                    <div class="session-list">
+                        <div class="doc-upload-section">
+                            <button id="newFileSessionBtn" class="new-session-btn">
+                                <span>+</span> 上传文档
+                            </button>
+                            <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md" style="display: none;"/>
+                            <div class="upload-info" id="uploadInfo"></div>
+                        </div>
+                        <div class="doc-list" id="docList"></div>
+                        <!-- 文档预览区 -->
+                        <div class="doc-preview" id="docPreview">
+                            <div class="doc-content" id="docContent"></div>
+                        </div>
                     </div>
-                    <div class="analysis-results">
-                        <!-- 分析结果展示区 -->
+
+                    <!-- 右侧聊天区域 -->
+                    <div class="chat-container">
+                        <div class="chat-messages" id="analysisMessages"></div>
+                        <div class="input-container">
+                            <input class="messageInput" type="text" id="analysisInput" placeholder="输入问题以分析文档...">
+                            <button class="sendButton" id="analysisButton">分析</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,51 +232,59 @@
         });
 
         // 文件上传处理
-        const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
-
-        // 拖拽事件处理
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            handleFiles(files);
-        });
-
-        // 点击上传
-        dropZone.addEventListener('click', () => fileInput.click());
-
+        
         fileInput.addEventListener('change', (e) => {
             handleFiles(e.target.files);
         });
 
         function handleFiles(files) {
             if (files.length > 0) {
-                const fileName = files[0].name;
-                dropZone.innerHTML = `
-                    <p>已选择文件：</p>
-                    <div class="file-info">
-                        <strong>${fileName}</strong>
-                        <button onclick="clearFile()">清除</button>
+                const file = files[0];
+                console.log('开始上传文件:', file.name);
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const newDoc = {
+                        id: Date.now(),
+                        name: file.name,
+                        content: e.target.result,
+                        uploadTime: new Date(),
+                        analysis: []
+                    };
+                    
+                    console.log('文件读取完成:', {
+                        fileName: newDoc.name,
+                        fileSize: e.target.result.length,
+                        timestamp: newDoc.uploadTime
+                    });
+                    
+                    documents.unshift(newDoc);
+                    saveDocuments();
+                    renderDocuments();
+                    showDocument(newDoc.id);
+                };
+                
+                reader.onerror = function(error) {
+                    console.error('文件读取失败:', error);
+                };
+                
+                reader.readAsText(file);
+                
+                // 显示上传信息
+                document.getElementById('uploadInfo').innerHTML = `
+                    <div class="upload-status">
+                        <span>已选择：${file.name}</span>
+                        <button onclick="clearUpload()">清除</button>
                     </div>
                 `;
-                // 这里可以添加文件上传逻辑
             }
         }
 
-        function clearFile() {
-            fileInput.value = '';
-            dropZone.innerHTML = '<p>拖放文件到此区域或点击上传</p>';
-        }
+        document.getElementById('newFileSessionBtn').onclick = () => {
+            fileInput.click(); // 触发文件选择框
+        };
+
         // 配置Markdown解析
         marked.setOptions({
             breaks: true,
@@ -439,6 +463,283 @@
         // 初始化
         document.getElementById('newSessionBtn').addEventListener('click', createNewSession);
         initSessions();
+
+        // 文档分析相关的JavaScript代码
+        let documents = [];
+        let currentDocId = null;
+
+        // 初始化文档系统
+        function initDocuments() {
+            console.log('初始化文档系统');
+            try {
+                const saved = localStorage.getItem('documents');
+                documents = JSON.parse(saved) || [];
+                console.log('加载已保存的文档:', {
+                    documentCount: documents.length
+                });
+            } catch (error) {
+                console.error('加载保存的文档失败:', error);
+                documents = [];
+            }
+            renderDocuments();
+        }
+
+        // 显示文档内容
+        function showDocument(docId) {
+            console.log('切换到文档:', docId);
+            currentDocId = docId;
+            const doc = documents.find(d => d.id === docId);
+            if (doc) {
+                console.log('加载文档:', {
+                    fileName: doc.name,
+                    analysisCount: doc.analysis.length
+                });
+                
+                document.getElementById('docContent').innerHTML = `
+                    <div class="doc-header">
+                        <h3>${doc.name}</h3>
+                        <span class="doc-time">${formatTime(doc.uploadTime)}</span>
+                    </div>
+                    <pre class="doc-text">${doc.content}</pre>
+                `;
+                
+                // 显示之前的分析记录
+                const analysisMessages = document.getElementById('analysisMessages');
+                analysisMessages.innerHTML = doc.analysis.map(a => `
+                    <div class="message ${a.role}">
+                        <div class="message-content">${marked.parse(a.content)}</div>
+                        <div class="message-time">${formatTime(a.timestamp)}</div>
+                    </div>
+                `).join('');
+            } else {
+                console.warn('未找到文档:', docId);
+            }
+        }
+
+        // 保存文档
+        function saveDocuments() {
+            console.log('保存文档列表:', {
+                documentCount: documents.length,
+                timestamp: new Date()
+            });
+            localStorage.setItem('documents', JSON.stringify(documents));
+        }
+
+        // 渲染文档列表
+        function renderDocuments() {
+            console.log('渲染文档列表:', {
+                documentCount: documents.length,
+                currentDocId: currentDocId
+            });
+            
+            const container = document.getElementById('docList');
+            container.innerHTML = documents.map(doc => `
+                <div class="doc-item ${doc.id === currentDocId ? 'active' : ''}" 
+                     onclick="showDocument(${doc.id})">
+                    <div class="doc-title">${doc.name}</div>
+                    <div class="doc-time">${formatTime(doc.uploadTime)}</div>
+                    <button class="delete-doc-btn" onclick="deleteDocument(${doc.id})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        // 删除文档
+        function deleteDocument(docId) {
+            console.log('删除文档:', docId);
+            const index = documents.findIndex(d => d.id === docId);
+            if (index >= 0) {
+                const deletedDoc = documents[index];
+                console.log('找到要删除的文档:', {
+                    fileName: deletedDoc.name,
+                    uploadTime: deletedDoc.uploadTime
+                });
+                
+                documents.splice(index, 1);
+                if (currentDocId === docId) {
+                    currentDocId = documents.length ? documents[0].id : null;
+                    if (currentDocId) {
+                        showDocument(currentDocId);
+                    } else {
+                        document.getElementById('docContent').innerHTML = '';
+                        document.getElementById('analysisMessages').innerHTML = '';
+                        console.log('清空文档显示和分析记录');
+                    }
+                }
+                saveDocuments();
+                renderDocuments();
+                console.log('文档删除完成');
+            } else {
+                console.warn('未找到要删除的文档:', docId);
+            }
+        }
+
+        // 分析文档
+        async function analyzeDocument(question) {
+            if (!currentDocId) {
+                console.warn('未选择文档');
+                return;
+            }
+            
+            const doc = documents.find(d => d.id === currentDocId);
+            if (!doc) {
+                console.warn('文档不存在:', currentDocId);
+                return;
+            }
+            
+            console.log('开始分析文档:', {
+                docId: currentDocId,
+                fileName: doc.name,
+                question: question
+            });
+            
+            // 添加用户问题
+            const userMessage = {
+                role: 'user',
+                content: question,
+                timestamp: new Date()
+            };
+            doc.analysis.push(userMessage);
+            
+            // 显示用户问题
+            addAnalysisMessage(userMessage);
+            
+            try {
+                // 显示思考中的动画
+                showAnalysisTypingIndicator();
+                console.log('发送分析请求...');
+                
+                // 发送分析请求
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        docId: currentDocId,
+                        question: question,
+                        content: doc.content
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('收到分析结果:', result);
+                
+                if (result.code === 200) {
+                    // 添加AI回答
+                    const aiMessage = {
+                        role: 'bot',
+                        content: result.answer,
+                        timestamp: new Date()
+                    };
+                    doc.analysis.push(aiMessage);
+                    
+                    // 显示AI回答
+                    addAnalysisMessage(aiMessage);
+                    
+                    // 保存更新
+                    saveDocuments();
+                    console.log('分析完成并保存');
+                } else {
+                    throw new Error(result.error || '分析失败');
+                }
+            } catch (error) {
+                console.error('分析失败:', error);
+                // 显示错误消息
+                const errorMessage = {
+                    role: 'bot',
+                    content: `❌ 分析失败：${error.message}`,
+                    timestamp: new Date()
+                };
+                addAnalysisMessage(errorMessage);
+            } finally {
+                hideAnalysisTypingIndicator();
+            }
+        }
+
+        // 添加分析消息
+        function addAnalysisMessage(message) {
+            console.log('添加消息:', {
+                role: message.role,
+                timestamp: message.timestamp,
+                contentLength: message.content.length
+            });
+            
+            const container = document.getElementById('analysisMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.role}`;
+            
+            // 根据消息类型设置内容
+            if (message.role === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="message-content">${DOMPurify.sanitize(marked.parse(message.content))}</div>
+                    <div class="message-time">${formatTime(message.timestamp)}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-content">${message.content}</div>
+                    <div class="message-time">${formatTime(message.timestamp)}</div>
+                `;
+            }
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 显示分析思考中的动画
+        function showAnalysisTypingIndicator() {
+            const container = document.getElementById('analysisMessages');
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator analysis-typing';
+            indicator.innerHTML = `
+                思考中<div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            container.appendChild(indicator);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 隐藏分析思考中的动画
+        function hideAnalysisTypingIndicator() {
+            document.querySelectorAll('.analysis-typing').forEach(indicator => indicator.remove());
+        }
+
+        // 事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            initSessions();
+            initDocuments();
+            
+            // 文件上传按钮
+            document.getElementById('newFileSessionBtn').onclick = () => {
+                document.getElementById('fileInput').click();
+            };
+            
+            // // 文件选择处理
+            // document.getElementById('fileInput').addEventListener('change', (e) => {
+            //     handleFiles(e.target.files);
+            // });
+            
+            // 分析按钮点击事件
+            document.getElementById('analysisButton').addEventListener('click', () => {
+                const input = document.getElementById('analysisInput');
+                const question = input.value.trim();
+                if (question) {
+                    analyzeDocument(question);
+                    input.value = '';
+                }
+            });
+            
+            // 分析输入框回车事件
+            document.getElementById('analysisInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const question = e.target.value.trim();
+                    if (question) {
+                        analyzeDocument(question);
+                        e.target.value = '';
+                    }
+                }
+            });
+        });
     </script>
 </body>
 

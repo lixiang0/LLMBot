@@ -108,7 +108,7 @@ body {
   bottom: 0;
 }
 
-#messageInput {
+.messageInput {
   flex: 1;
   padding: 12px 16px;
   border: 1px solid #ddd;
@@ -118,7 +118,7 @@ body {
   transition: border-color 0.3s;
 }
 
-#sendButton {
+.sendButton {
   padding: 12px 20px;
   background: #007bff;
   color: white;
@@ -128,7 +128,7 @@ body {
   transition: all 0.3s;
 }
 
-#sendButton:disabled {
+.sendButton:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
@@ -176,7 +176,6 @@ body {
 }
 
 @keyframes typing {
-
   0%,
   60%,
   100% {
@@ -196,38 +195,48 @@ body {
 }
 
 .sidebar {
-  width: 200px;
-  background: #f8f9fa;
-  border-right: 1px solid #eee;
-  padding: 20px;
+  width: 100px;
+  background-color: #2c3e50;
+  padding: 20px 10px;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .tab-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 15px;
+  width: 100%;
 }
 
 .tab-button {
-  padding: 12px 16px;
+  width: 100%;
+  height: auto;
+  min-height: 50px;
   border: none;
   border-radius: 8px;
-  background: none;
-  text-align: left;
+  background-color: #34495e;
+  color: #fff;
   cursor: pointer;
-  transition: all 0.2s;
-  color: #666;
+  transition: all 0.3s ease;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .tab-button.active {
-  background: #007bff;
-  color: white;
+  background-color: #3498db;
 }
 
 .tab-button:hover:not(.active) {
-  background: #e9ecef;
+  background-color: #405d7b;
 }
 
 .main-content {
@@ -375,11 +384,12 @@ body {
 }
 
 .session-list {
-  width: 240px;
-  background: #f8f9fa;
-  border-right: 1px solid #eee;
+  width: 400px;
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .new-session-btn {
@@ -495,12 +505,12 @@ body {
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   }
 
-  #messageInput {
+  .messageInput {
     padding: 10px 14px;
     font-size: 15px;
   }
 
-  #sendButton {
+  .sendButton {
     padding: 10px 16px;
   }
 
@@ -539,4 +549,394 @@ textarea,
 select {
   font-size: 16px;
   transform: translateZ(0);
+}
+
+/* 基础样式 */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f5f5;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  width: 100px;
+  background-color: #2c3e50;
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.tab-button {
+  width: 100%;
+  height: auto;
+  min-height: 50px;
+  border: none;
+  border-radius: 8px;
+  background-color: #34495e;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.tab-button.active {
+  background-color: #3498db;
+}
+
+.tab-button:hover:not(.active) {
+  background-color: #405d7b;
+}
+
+/* 主内容区样式 */
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.content-panel {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.content-panel.active {
+  display: block;
+}
+
+/* 会话布局 */
+.session-layout {
+  display: flex;
+  height: 100%;
+}
+
+/* 会话列表样式 */
+.session-list {
+  width: 400px;
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.new-session-btn {
+  margin: 15px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: #3498db;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.new-session-btn:hover {
+  background-color: #2980b9;
+}
+
+.session-items, .doc-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.session-item, .doc-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.session-item:hover, .doc-item:hover {
+  background-color: #e9ecef;
+}
+
+.session-item.active, .doc-item.active {
+  background-color: #e3f2fd;
+}
+
+.session-title, .doc-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+  padding-right: 24px;
+}
+
+.session-time, .doc-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.delete-session-btn, .delete-doc-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.session-item:hover .delete-session-btn,
+.doc-item:hover .delete-doc-btn {
+  opacity: 1;
+}
+
+/* 聊天容器样式 */
+.chat-container, .doc-analysis-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+/* 文档分析特定样式 */
+.doc-analysis-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.doc-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background-color: #f8f9fa;
+}
+
+.doc-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.doc-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.doc-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.doc-text {
+  white-space: pre-wrap;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.analysis-chat {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.message {
+  margin-bottom: 20px;
+  max-width: 80%;
+}
+
+.message.user {
+  margin-left: auto;
+}
+
+.message.bot {
+  margin-right: auto;
+}
+
+.message-content {
+  padding: 12px;
+  border-radius: 12px;
+  background-color: #f0f2f5;
+  margin-bottom: 4px;
+}
+
+.message.user .message-content {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}
+
+.input-container {
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 10px;
+  background-color: #fff;
+}
+
+.messageInput {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+}
+
+.messageInput:focus {
+  border-color: #3498db;
+}
+
+.sendButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #3498db;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.sendButton:hover {
+  background-color: #2980b9;
+}
+
+/* 文档上传区域样式 */
+.doc-upload-section {
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.upload-info {
+  margin-top: 10px;
+}
+
+.upload-status {
+  padding: 8px;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upload-status button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  background-color: #dc3545;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 代码高亮和Markdown样式 */
+.message-content pre {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.message-content code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+}
+
+.message.user .message-content pre,
+.message.user .message-content code {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a8a8a8;
+}
+
+/* 响应式布局 */
+@media (max-width: 1024px) {
+  .session-list {
+    width: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .session-layout {
+    flex-direction: column;
+  }
+  
+  .session-list {
+    width: 100%;
+    height: 50vh;
+  }
+  
+  .doc-list {
+    max-height: 25%;
+  }
+  
+  .doc-preview {
+    max-height: 50%;
+  }
+  
+  .chat-container {
+    height: 50vh;
+    border-left: none;
+    border-top: 1px solid #e0e0e0;
+  }
 }
